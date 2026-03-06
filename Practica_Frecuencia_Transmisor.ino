@@ -6,100 +6,47 @@
 #include <SPI.h>
 #include <RF24.h>
 #include <nRF24L01.h>
-#include <Adafruit_NeoPixel.h>
 
-#define PIN_RGB 48  // Pin del sensor led
 RF24 radio(2, 5);   // CE, CSN
-const byte address[6] = "12321";
-int datoRecibido = 0;
+const byte address[6] = "12321"; // Canal de comunicación
+int datoRecibido = 0; // Variable receptora
 
-Adafruit_NeoPixel pixels(1, PIN_RGB, NEO_GRB + NEO_KHZ800);
-/*
-void setColor(uint8_t r, uint8_t g, uint8_t b) {
-  pixels.setPixelColor(0, pixels.Color(r, g, b));
-  pixels.show();
-}
-*/
+
 void setup() {
   Serial.begin(115200);
-  //pixels.begin();
-  //pixels.setBrightness(30);
 
+  // Inicializacion de pines del módulo NRF24L01
   SPI.begin(18, 19, 23, 5);
 
   Serial.println("\nCircuito Receptor");
-  //radio.begin();
 
+  //Verificación del modulo NRF24L01, si es que la detecta
   if (!radio.begin()) {
     Serial.println("No se detecta el nRF24L01");
     while (1);
   }
 
-  radio.openReadingPipe(1, address);
-  radio.setPALevel(RF24_PA_LOW);  // radio. setPALevel
-  radio.startListening();
+  radio.openReadingPipe(1, address); // Abre el canal y usa la dirección
+  radio.setPALevel(RF24_PA_LOW);  // Ajusta el nivel de potencia
+  radio.startListening(); // Activa el modo recepción
 }
 
 void loop() {
+  // Verifica si hay datos del transmisor
   if (radio.available()) {
+    // Lee el dato y lo guarda
     radio.read(&datoRecibido, sizeof(datoRecibido));
 
-    Serial.print("\nEstado recibio: ");
+    // Muestra el dato recibido
+    Serial.print("\nDato actual: ");
     Serial.println(datoRecibido);
 
+    // Valida si se recibió
     if (datoRecibido > 0) {
-      Serial.println("Dato enviado");
+      Serial.println("Dato recibido");
     } else { 
       Serial.println("Sin señal");
     }
-    delay(1000);
+    delay(1000); // Espera un 1 segundo
   }
 }
-
-
-/*
-
-#include <RF24.h>
-#include <nRF24L01.h>
-#include <printf.h>  
-
-#define boton 4
-int contador = 0;
-RF24 radio(2, 5);  // CE, CSN
-const byte address[6] = "12321";
-
-void setup() {
-  Serial.begin(115200);
-  Serial.println("\nCircuito Transmisor");
-  pinMode(boton, INPUT_PULLUP);
-
-  SPI.begin(18, 19, 23, 5);  // SCK, MISO, MOSI, SS (CSN)
-
-  radio.begin();
-
-  if (!radio.begin()) {
-    Serial.println("No se detecta el nRF24L01");
-    while (1);
-  }
-
-  radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_LOW);
-  radio.stopListening();
-}
-
-void loop() {
-  Serial.print("Enviando dato: ");
-  Serial.println(contador);
-
-  bool ok = radio.write(&contador, sizeof(contador));
-
-  if (ok) {
-    Serial.println(">> ¡Confirmado!");
-  } else {
-    Serial.println(">> Sin respuesta");
-  }  
-
-  contador++;
-  delay(1000); // Envía cada 1 segundo
-}
-*/
